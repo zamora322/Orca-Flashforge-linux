@@ -599,6 +599,13 @@ void HintDatabase::clear_used()
 
 void NotificationManager::HintNotification::count_spaces()
 {
+    if (ImGui::GetCurrentContext() == nullptr || ImGui::GetFont() == nullptr) {
+        m_line_height = 15.0f;
+        m_left_indentation = m_line_height;
+        m_window_width_offset = m_left_indentation + m_line_height * 3.f;
+        m_window_width = m_line_height * 25;
+        return;
+    }
 	//determine line width 
 	m_line_height = ImGui::CalcTextSize("A").y;
 
@@ -697,6 +704,13 @@ void NotificationManager::HintNotification::count_lines()
 
 	if (text.empty())
 		return;
+
+    if (ImGui::GetCurrentContext() == nullptr || ImGui::GetFont() == nullptr) {
+        m_endlines.clear();
+        m_endlines.push_back(text.length());
+        m_lines_count = 1;
+        return;
+    }
 
 	m_endlines.clear();
 	while (last_end < text.length() - 1)

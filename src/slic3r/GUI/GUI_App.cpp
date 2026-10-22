@@ -1044,8 +1044,8 @@ void GUI_App::post_init()
         BOOST_LOG_TRIVIAL(info) << __FUNCTION__ << ", begin load_gl_resources";
 #ifndef __linux__
         mainframe->Freeze();
-#endif
         plater_->canvas3D()->enable_render(false);
+#endif
         mainframe->select_tab(size_t(MainFrame::tp3DEditor));
         plater_->select_view_3D("3D");
         //BBS init the opengl resource here
@@ -1075,6 +1075,7 @@ void GUI_App::post_init()
         }
         else {
             BOOST_LOG_TRIVIAL(warning) << __FUNCTION__ << "Found glcontext not ready, postpone the init";
+            plater_->canvas3D()->enable_render(true);
         }
 //#endif
         if (is_editor())

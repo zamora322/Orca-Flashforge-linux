@@ -76,9 +76,9 @@ void main()
 
     gl_Position = projection_matrix * position;
     // Fill in the scalars for fragment shader clipping. Fragments with any of these components lower than zero are discarded.
-    float cp_dot = (clipping_plane.w > 1e10) ? 1.0 : dot(world_pos, clipping_plane);
-    float z_min_dot = (z_range.x < -1e10) ? 1.0 : (world_pos.z - z_range.x);
-    float z_max_dot = (z_range.y > 1e10) ? 1.0 : (z_range.y - world_pos.z);
+    float cp_dot = (clipping_plane.w >= 1e5) ? 1.0 : dot(world_pos, clipping_plane);
+    float z_min_dot = (z_range.x <= -1e5) ? 1.0 : (world_pos.z - z_range.x);
+    float z_max_dot = (z_range.y >= 1e5) ? 1.0 : (z_range.y - world_pos.z);
     clipping_planes_dots = vec3(cp_dot, z_min_dot, z_max_dot);
     color_clip_plane_dot = dot(world_pos, color_clip_plane);
 }

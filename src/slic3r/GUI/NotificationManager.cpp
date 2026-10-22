@@ -285,7 +285,7 @@ void NotificationManager::PopNotification::render(GLCanvas3D& canvas, float init
     float         right_gap  = right_margin + (move_from_overlay ? overlay_width + m_line_height * 5 : 0);
 	bool          fading_pop = false;
 
-	if (m_line_height != ImGui::CalcTextSize("A").y)
+	if (ImGui::GetCurrentContext() != nullptr && ImGui::GetFont() != nullptr && m_line_height != ImGui::CalcTextSize("A").y)
 		init();
 
 	set_next_window_size(imgui);
@@ -377,7 +377,7 @@ void NotificationManager::PopNotification::bbl_render_block_notification(GLCanva
     float         right_gap  = right_margin + (move_from_overlay ? overlay_width + m_line_height * 5 : 0);
 	bool          fading_pop = false;
 
-	if (m_line_height != ImGui::CalcTextSize("A").y)
+	if (ImGui::GetCurrentContext() != nullptr && ImGui::GetFont() != nullptr && m_line_height != ImGui::CalcTextSize("A").y)
 		init();
 
 	set_next_window_size(imgui);
@@ -477,6 +477,18 @@ bool NotificationManager::PopNotification::push_background_color()
 }
 void NotificationManager::PopNotification::count_spaces()
 {
+    if (ImGui::GetCurrentContext() == nullptr || ImGui::GetFont() == nullptr) {
+        m_line_height = 15.0f;
+        m_left_indentation = m_line_height;
+        m_window_width_offset = m_left_indentation + m_line_height * 3.f;
+        if (m_data.level == NotificationLevel::ErrorNotificationLevel || m_data.level == NotificationLevel::SeriousWarningNotificationLevel) {
+            m_left_indentation = 32 + m_line_height;
+            m_window_width_offset = 90.f;
+        }
+        m_window_width = m_line_height * 25;
+        return;
+    }
+
 	//determine line width
 	m_line_height = ImGui::CalcTextSize("A").y;
 
@@ -506,6 +518,13 @@ void NotificationManager::PopNotification::count_lines()
 
 	if (text.empty())
 		return;
+
+    if (ImGui::GetCurrentContext() == nullptr || ImGui::GetFont() == nullptr) {
+        m_endlines.clear();
+        m_endlines.push_back(text.length());
+        m_lines_count = 1;
+        return;
+    }
 
 	// handle with marks
     if (pos_start == string::npos && pos_end == string::npos) {
@@ -1127,6 +1146,13 @@ void NotificationManager::ExportFinishedNotification::count_spaces()
 	{
 		return PopNotification::count_spaces();
 	}
+    if (ImGui::GetCurrentContext() == nullptr || ImGui::GetFont() == nullptr) {
+        m_line_height = 15.0f;
+        m_left_indentation = m_line_height;
+        m_window_width_offset = m_left_indentation + m_line_height * (m_to_removable ? 6.f : 3.f);
+        m_window_width = m_line_height * 25;
+        return;
+    }
 	//determine line width
 	m_line_height = ImGui::CalcTextSize("A").y;
 
@@ -1330,6 +1356,13 @@ void NotificationManager::ProgressBarNotification::render_bar(ImGuiWrapper& imgu
 //------UpdatedItemsInfoNotification-------
 void NotificationManager::UpdatedItemsInfoNotification::count_spaces()
 {
+    if (ImGui::GetCurrentContext() == nullptr || ImGui::GetFont() == nullptr) {
+        m_line_height = 15.0f;
+        m_left_indentation = m_line_height;
+        m_window_width_offset = m_left_indentation + m_line_height * 3.f;
+        m_window_width = m_line_height * 25;
+        return;
+    }
 	//determine line width
 	m_line_height = ImGui::CalcTextSize("A").y;
 
@@ -1597,6 +1630,13 @@ void NotificationManager::PrintHostUploadNotification::init()
 }
 void NotificationManager::PrintHostUploadNotification::count_spaces()
 {
+    if (ImGui::GetCurrentContext() == nullptr || ImGui::GetFont() == nullptr) {
+        m_line_height = 15.0f;
+        m_left_indentation = m_line_height;
+        m_window_width_offset = m_left_indentation + m_line_height * 3.f;
+        m_window_width = m_line_height * 25;
+        return;
+    }
 	//determine line width
 	m_line_height = ImGui::CalcTextSize("A").y;
 

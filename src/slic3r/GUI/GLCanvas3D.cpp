@@ -1910,13 +1910,11 @@ void GLCanvas3D::render(bool only_init)
     if (m_canvas == nullptr)
         return;
 
-    //BBS: add enable_render
-    if (!m_enable_render)
-        return;
-
     // ensures this canvas is current and initialized
     if (!_is_shown_on_screen() || !_set_current() || !wxGetApp().init_opengl())
         return;
+
+    m_enable_render = true;
 
     if (!is_initialized() && !init())
         return;
