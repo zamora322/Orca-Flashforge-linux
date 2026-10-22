@@ -58,8 +58,15 @@ echo -n "[9/9] Generating Linux app..."
         exit 1
     fi
     cp -fl "${ORIGINAL_BINARY_LOCATION}" "package/bin/@SLIC3R_APP_CMD@"
+    if [[ -z "$NETWORK_LIBRARY_PATH" ]] ; then
+        if [[ -f "$(dirname "${ORIGINAL_BINARY_LOCATION}")/libFlashNetwork.so" ]] ; then
+            NETWORK_LIBRARY_PATH="$(dirname "${ORIGINAL_BINARY_LOCATION}")/libFlashNetwork.so"
+        elif [[ -f "@CMAKE_CURRENT_SOURCE_DIR@/slic3r/GUI/FlashForge/lib/linux-x86_64/libFlashNetwork.so" ]] ; then
+            NETWORK_LIBRARY_PATH="@CMAKE_CURRENT_SOURCE_DIR@/slic3r/GUI/FlashForge/lib/linux-x86_64/libFlashNetwork.so"
+        fi
+    fi
     if [[ -n "$NETWORK_LIBRARY_PATH" ]] ; then
-        cp -fl "$NETWORK_LIBRARY_PATH" "package/bin/$(basename "$NETWORK_LIBRARY_PATH")"
+        cp -fl "$NETWORK_LIBRARY_PATH" "package/bin/$(basename "$NETWORK_LIBRARY_PATH")" 2>/dev/null || cp -f "$NETWORK_LIBRARY_PATH" "package/bin/$(basename "$NETWORK_LIBRARY_PATH")"
     fi
 
     # create bin

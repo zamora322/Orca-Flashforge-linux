@@ -2599,9 +2599,9 @@ void GUI_App::init_flashnetwork()
     std::string appPathWithSep = appFileName.GetPathWithSep().ToUTF8().data();
 #ifdef _WIN32
     std::string flashNetworkDllPath = appPathWithSep + "FlashNetwork.dll";
-#elif __APPLE__
+#elif defined(__APPLE__)
     std::string flashNetworkDllPath = appPathWithSep + "libFlashNetwork.dylib";
-#elif __LINUX__
+#elif defined(__linux__) || defined(__LINUX__)
     std::string flashNetworkDllPath = appPathWithSep + "libFlashNetwork.so";
 #endif
     Slic3r::GUI::MultiComMgr::inst()->initalize(flashNetworkDllPath, data_dir());

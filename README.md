@@ -49,6 +49,10 @@ Este fork mantiene correcciones críticas para la ejecución, visualización y e
 - **Problema:** Al iniciar el laminado, los eventos de progreso en segundo plano actualizaban las notificaciones flotantes en el bucle inactivo de wxWidgets. Al llamar a `count_spaces()` y `count_lines()`, se invocaba `ImGui::CalcTextSize()` fuera de un fotograma de ImGui, donde `ImGui::GetFont()` es nulo, causando un `SIGSEGV` inmediato.
 - **Solución:** Se introdujeron comprobaciones de validez de contexto y fuente (`ImGui::GetCurrentContext()` y `ImGui::GetFont()`) en `NotificationManager.cpp` y `HintNotification.cpp`, asignando dimensiones seguras de respaldo mientras el contexto gráfico no esté en un pase de renderizado activo.
 
+### 5. Corrección de inicio de sesión y servicios FlashForge Cloud (`libFlashNetwork.so`)
+- **Problema:** Tras autenticarse vía web (Google OAuth), el inicio de sesión no persistía o quedaba congelado en el mensaje *"Inicio de sesión..."* / *"Account Auto Connecting..."*. Esto se debía a que el módulo de comunicaciones de Flashforge (`libFlashNetwork.so`) no se empaquetaba dentro del AppImage, y la clase `FlashNetworkIntfc` exigía de forma estricta la versión `3.4.3` y métodos nuevos de sincronización de perfiles en la nube ausentes en Linux, haciendo fallar la inicialización con error `stage=network_interface`.
+- **Solución:** Se integró la biblioteca `libFlashNetwork.so` en el repositorio y en los scripts de empaquetado del AppImage (`build_linux.sh` y `build_linux_image.sh.in`), se corrigió la detección de plataforma en `GUI_App.cpp` (`defined(__linux__)`), se implementaron funciones de respaldo (*fallbacks*) para las llamadas opcionales de sincronización y se flexibilizó la comprobación de versión para admitir la serie `3.4.x`. Con esto, la sesión de usuario, el perfil y la comunicación con impresoras en la nube se activan inmediatamente.
+
 ---
 
 ### Compilación en Linux

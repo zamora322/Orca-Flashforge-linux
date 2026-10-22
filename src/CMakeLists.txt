@@ -153,6 +153,7 @@ if (NOT WIN32 AND NOT APPLE)
     add_custom_command(TARGET Orca-Flashforge POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E create_symlink "FlashStudio" "Flash Studio"
         COMMAND ${CMAKE_COMMAND} -E create_symlink "FlashStudio" "flash studio"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/slic3r/GUI/FlashForge/lib/linux-x86_64/libFlashNetwork.so" "$<TARGET_FILE_DIR:Orca-Flashforge>/libFlashNetwork.so"
         WORKING_DIRECTORY "$<TARGET_FILE_DIR:Orca-Flashforge>"
         VERBATIM)
     configure_file(${CMAKE_CURRENT_SOURCE_DIR}/dev-utils/platform/unix/build_linux_image.sh.in ${CMAKE_CURRENT_BINARY_DIR}/build_linux_image.sh USE_SOURCE_PERMISSIONS @ONLY)

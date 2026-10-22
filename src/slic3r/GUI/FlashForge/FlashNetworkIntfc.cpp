@@ -9,10 +9,78 @@
 
 namespace fnet {
 
+namespace {
+static FlashNetworkIntfc *s_current_intfc = nullptr;
+
+static int default_uploadLogFileCloudEx(const char *clientId, const char *accessToken,
+    const fnet_upload_file_data_t *uploadFileData, const char *connectEmail,
+    const char *feedbackId, int msTimeout)
+{
+    if (s_current_intfc && s_current_intfc->uploadLogFileCloud) {
+        return s_current_intfc->uploadLogFileCloud(clientId, accessToken, uploadFileData, connectEmail, msTimeout);
+    }
+    return -1;
+}
+
+static int default_getSettingList2(const char *clientId, const char *accessToken,
+    const char *bundleVersion, fnet_setting_check_callback_t checkCallback, void *checkCallbackData,
+    fnet_setting_progress_callback_t progressCallback, void *progressCallbackData,
+    fnet_setting_cancel_callback_t cancelCallback, void *cancelCallbackData, int msTimeout)
+{
+    return -1;
+}
+
+static int default_getSettingList(const char *clientId, const char *accessToken,
+    const char *bundleVersion, fnet_setting_progress_callback_t progressCallback,
+    void *progressCallbackData, fnet_setting_cancel_callback_t cancelCallback,
+    void *cancelCallbackData, int msTimeout)
+{
+    return -1;
+}
+
+static int default_getUserPresets(const char *clientId, const char *accessToken,
+    char **userPresetsJson)
+{
+    if (userPresetsJson) *userPresetsJson = nullptr;
+    return -1;
+}
+
+static int default_requestSettingId(const char *clientId, const char *accessToken,
+    const char *name, const char *valuesJson, char **settingId, char **resultValuesJson,
+    unsigned int *httpCode, int msTimeout)
+{
+    if (settingId) *settingId = nullptr;
+    if (resultValuesJson) *resultValuesJson = nullptr;
+    if (httpCode) *httpCode = 500;
+    return -1;
+}
+
+static int default_putSetting(const char *clientId, const char *accessToken,
+    const char *settingId, const char *name, const char *valuesJson,
+    char **resultValuesJson, unsigned int *httpCode, int msTimeout)
+{
+    if (resultValuesJson) *resultValuesJson = nullptr;
+    if (httpCode) *httpCode = 500;
+    return -1;
+}
+
+static int default_deleteSetting(const char *clientId, const char *accessToken,
+    const char *settingId, unsigned int *httpCode, int msTimeout)
+{
+    if (httpCode) *httpCode = 500;
+    return -1;
+}
+
+static void default_freeUploadLogInfo(const fnet_upload_log_info_t *uploadLogInfo)
+{
+}
+} // namespace
+
 FlashNetworkIntfc::FlashNetworkIntfc(const char *libraryPath, const char *serverSettingsPath,
     const fnet_log_settings_t &logSettings)
     : m_isOk(false)
 {
+    s_current_intfc = this;
     library_handle_t libraryHandle = loadLibrary(libraryPath);
     if (libraryHandle == INVALID_LIBRARY_HANDLE) {
         return;
@@ -22,6 +90,11 @@ FlashNetworkIntfc::FlashNetworkIntfc(const char *libraryPath, const char *server
     if (ptr == nullptr) { \
         printf("INIT_FUNC_PTR %s failed\n", #func); \
         return; \
+    }
+#define INIT_OPTIONAL_FUNC_PTR(ptr, func, fallback) \
+    ptr = (decltype(&func)) getFuncPtr(libraryHandle, #func); \
+    if (ptr == nullptr) { \
+        ptr = fallback; \
     }
     INIT_FUNC_PTR(initlize, fnet_initlize);
     INIT_FUNC_PTR(uninitlize, fnet_uninitlize);
@@ -88,7 +161,7 @@ FlashNetworkIntfc::FlashNetworkIntfc(const char *libraryPath, const char *server
     INIT_FUNC_PTR(freeBindAccountRelpResult, fnet_freeBindAccountRelpResult);
     INIT_FUNC_PTR(uploadAiImageClound, fnet_uploadAiImageClound);
     INIT_FUNC_PTR(uploadLogFileCloud, fnet_uploadLogFileCloud);
-    INIT_FUNC_PTR(uploadLogFileCloudEx, fnet_uploadLogFileCloudEx);
+    INIT_OPTIONAL_FUNC_PTR(uploadLogFileCloudEx, fnet_uploadLogFileCloudEx, default_uploadLogFileCloudEx);
     INIT_FUNC_PTR(freeCloundFileData, fnet_freeCloundFileData);
     INIT_FUNC_PTR(getUserAiPointsInfo, fnet_getUserAiPointsInfo);
     INIT_FUNC_PTR(freeUserAiPointsInfo, fnet_freeUserAiPointsInfo);
@@ -128,12 +201,12 @@ FlashNetworkIntfc::FlashNetworkIntfc(const char *libraryPath, const char *server
     INIT_FUNC_PTR(freeJobInfo, fnet_freeJobInfo);
     INIT_FUNC_PTR(doBusGetRequest, fnet_doBusGetRequest);
     INIT_FUNC_PTR(doBusPostRequest, fnet_doBusPostRequest);
-    INIT_FUNC_PTR(getSettingList2, fnet_getSettingList2);
-    INIT_FUNC_PTR(getSettingList, fnet_getSettingList);
-    INIT_FUNC_PTR(getUserPresets, fnet_getUserPresets);
-    INIT_FUNC_PTR(requestSettingId, fnet_requestSettingId);
-    INIT_FUNC_PTR(putSetting, fnet_putSetting);
-    INIT_FUNC_PTR(deleteSetting, fnet_deleteSetting);
+    INIT_OPTIONAL_FUNC_PTR(getSettingList2, fnet_getSettingList2, default_getSettingList2);
+    INIT_OPTIONAL_FUNC_PTR(getSettingList, fnet_getSettingList, default_getSettingList);
+    INIT_OPTIONAL_FUNC_PTR(getUserPresets, fnet_getUserPresets, default_getUserPresets);
+    INIT_OPTIONAL_FUNC_PTR(requestSettingId, fnet_requestSettingId, default_requestSettingId);
+    INIT_OPTIONAL_FUNC_PTR(putSetting, fnet_putSetting, default_putSetting);
+    INIT_OPTIONAL_FUNC_PTR(deleteSetting, fnet_deleteSetting, default_deleteSetting);
     INIT_FUNC_PTR(getMqttConfig, fnet_getMqttConfig);
     INIT_FUNC_PTR(freeMqttConfig, fnet_freeMqttConfig);
     INIT_FUNC_PTR(createConnection, fnet_createConnection);
@@ -147,14 +220,16 @@ FlashNetworkIntfc::FlashNetworkIntfc(const char *libraryPath, const char *server
     INIT_FUNC_PTR(freeSyncLoginInfo, fnet_freeSyncLoginInfo);
     INIT_FUNC_PTR(freeSyncBindInfo, fnet_freeSyncBindInfo);
     INIT_FUNC_PTR(freeSyncOnlineInfo, fnet_freeSyncOnlineInfo);
-    INIT_FUNC_PTR(freeUploadLogInfo, fnet_freeUploadLogInfo);
+    INIT_OPTIONAL_FUNC_PTR(freeUploadLogInfo, fnet_freeUploadLogInfo, default_freeUploadLogInfo);
     INIT_FUNC_PTR(allocString, fnet_allocString);
     INIT_FUNC_PTR(freeString, fnet_freeString);
-    if (initlize(serverSettingsPath, &logSettings) == FNET_OK && strcmp(getVersion(), "3.4.3") == 0) {
+    const char *ver = getVersion ? getVersion() : nullptr;
+    if (initlize(serverSettingsPath, &logSettings) == FNET_OK &&
+        ver != nullptr && (strcmp(ver, "3.4.3") == 0 || strcmp(ver, "3.4.0") == 0 || strncmp(ver, "3.4.", 4) == 0)) {
         m_isOk = true;
     }
     else {
-        printf("initlize flashnetwork failed, version = %s", getVersion());
+        printf("initlize flashnetwork failed, version = %s\n", ver ? ver : "null");
     }
 }
 

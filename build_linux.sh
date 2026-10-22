@@ -139,6 +139,13 @@ if [[ -n "${CLEAN_DOCKER_IMAGE}" ]] && [[ -z "${USE_DOCKER}" ]] ; then
     exit 1
 fi
 
+if [[ -z "${NETWORK_LIBRARY_PATH}" ]] ; then
+    DEFAULT_NET_LIB="${SCRIPT_PATH}/src/slic3r/GUI/FlashForge/lib/linux-x86_64/libFlashNetwork.so"
+    if [[ -f "${DEFAULT_NET_LIB}" ]] ; then
+        NETWORK_LIBRARY_PATH="${DEFAULT_NET_LIB}"
+    fi
+fi
+
 if [[ -n "${NETWORK_LIBRARY_PATH}" ]] ; then
     if [[ ! -f "${NETWORK_LIBRARY_PATH}" ]] ; then
         echo "Error: network library not found: ${NETWORK_LIBRARY_PATH}"
