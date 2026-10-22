@@ -266,7 +266,8 @@ void GLShaderProgram::set_uniform(int id, const std::array<float, 4>& value) con
 
 void GLShaderProgram::set_uniform(int id, const std::array<double, 4>& value) const
 {
-    const std::array<float, 4> f_value = { float(value[0]), float(value[1]), float(value[2]), float(value[3]) };
+    float val3 = (value[3] > 1e6) ? 1e6f : (value[3] < -1e6 ? -1e6f : float(value[3]));
+    const std::array<float, 4> f_value = { float(value[0]), float(value[1]), float(value[2]), val3 };
     set_uniform(id, f_value);
 }
 

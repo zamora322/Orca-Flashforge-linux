@@ -128,7 +128,7 @@ out vec4 out_color;
 
 void main()
 {
-    if (any(lessThan(clipping_planes_dots, ZERO)))
+    if (clipping_planes_dots.x < 0.0 || clipping_planes_dots.y < 0.0 || clipping_planes_dots.z < 0.0)
         discard;
 
     vec4 color;

@@ -271,7 +271,9 @@ void Camera::set_viewport(int x, int y, unsigned int w, unsigned int h)
 
 void Camera::apply_viewport() const
 {
-    glsafe(::glViewport(m_viewport[0], m_viewport[1], m_viewport[2], m_viewport[3]));
+    if (glad_glViewport != nullptr) {
+        glsafe(::glViewport(m_viewport[0], m_viewport[1], m_viewport[2], m_viewport[3]));
+    }
 }
 
 void Camera::apply_projection(const BoundingBoxf3& box, double near_z, double far_z)

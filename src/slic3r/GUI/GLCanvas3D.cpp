@@ -2192,6 +2192,25 @@ void GLCanvas3D::render_thumbnail(ThumbnailData &         thumbnail_data,
     render_thumbnail(thumbnail_data, w, h, thumbnail_params, model_objects, m_volumes, camera_type, camera_view_angle_type, for_picking, ban_light);
 }
 
+bool GLCanvas3D::_set_shown_canvas_current()
+{
+    // Called before GL work outside render(), where another library's GL context (e.g. WebKitGTK's) can be current.
+    // Inside render(), the shown canvas is the one already bound.
+    if (wxGetApp().plater() == nullptr)
+        return false;
+    GLCanvas3D* canvas = wxGetApp().plater()->get_current_canvas3D();
+    if (canvas != nullptr && canvas->_set_current()) {
+        wxGetApp().init_opengl();
+        return true;
+    }
+    GLCanvas3D* view3D_canvas = wxGetApp().plater()->get_view3D_canvas3D();
+    if (view3D_canvas != nullptr && view3D_canvas->_set_current()) {
+        wxGetApp().init_opengl();
+        return true;
+    }
+    return false;
+}
+
 void GLCanvas3D::render_thumbnail(ThumbnailData &           thumbnail_data,
                                   unsigned int              w,
                                   unsigned int              h,
@@ -2203,6 +2222,9 @@ void GLCanvas3D::render_thumbnail(ThumbnailData &           thumbnail_data,
                                   bool                      for_picking,
                                   bool                      ban_light)
 {
+    if (!_set_shown_canvas_current())
+        return;
+
     GLShaderProgram* shader = nullptr;
     if (for_picking)
         shader = wxGetApp().get_shader("flat");
@@ -2241,6 +2263,9 @@ void GLCanvas3D::render_thumbnail(ThumbnailData &                    thumbnail_d
                                   bool                               for_picking,
                                   bool                               ban_light)
 {
+    if (!_set_shown_canvas_current())
+        return;
+
     GLShaderProgram *shader = wxGetApp().get_shader("thumbnail");
     switch (OpenGLManager::get_framebuffers_type()) {
         case OpenGLManager::EFramebufferType::Arb: {
@@ -4802,6 +4827,7 @@ void GLCanvas3D::on_set_focus(wxFocusEvent& evt)
     _refresh_if_shown_on_screen();
     m_tooltip_enabled = true;
     m_is_touchpad_navigation = wxGetApp().app_config->get_bool("camera_navigation_style");
+    evt.Skip();
 }
 
 bool GLCanvas3D::is_camera_rotate(const wxMouseEvent& evt, const bool buttonsSwapped) const
@@ -6338,6 +6364,9 @@ void GLCanvas3D::render_thumbnail_framebuffer(ThumbnailData& thumbnail_data, uns
                                               bool                               for_picking,
                                               bool                               ban_light)
 {
+    if (!_set_shown_canvas_current())
+        return;
+
     thumbnail_data.set(w, h);
     if (!thumbnail_data.is_valid())
         return;
@@ -6451,6 +6480,9 @@ void GLCanvas3D::render_thumbnail_framebuffer_ext(ThumbnailData& thumbnail_data,
                                                   bool                               for_picking,
                                                   bool                               ban_light)
 {
+    if (!_set_shown_canvas_current())
+        return;
+
     thumbnail_data.set(w, h);
     if (!thumbnail_data.is_valid())
         return;
@@ -6557,6 +6589,9 @@ void GLCanvas3D::render_thumbnail_legacy(ThumbnailData& thumbnail_data, unsigned
                                          bool                               for_picking,
                                          bool                               ban_light)
 {
+    if (!_set_shown_canvas_current())
+        return;
+
     // check that thumbnail size does not exceed the default framebuffer size
     /*const Size& cnv_size = get_canvas_size();
     unsigned int cnv_w = (unsigned int)cnv_size.get_width();
@@ -7620,7 +7655,7 @@ void GLCanvas3D::_render_objects(GLVolumeCollection::ERenderType type, bool with
     if (m_use_clipping_planes)
         m_volumes.set_z_range(-m_clipping_planes[0].get_data()[3], m_clipping_planes[1].get_data()[3]);
     else
-        m_volumes.set_z_range(-FLT_MAX, FLT_MAX);
+        m_volumes.set_z_range(-1e5f, 1e5f);
 
     GLGizmosManager& gm = get_gizmos_manager();
     GLGizmoBase* current_gizmo = gm.get_current();
